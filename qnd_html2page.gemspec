@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'qnd_html2page'
-  s.version = '0.2.0'
+  s.version = '0.2.1'
   s.summary = 'Splits HTML into pages suitable for reading like a book.'
   s.authors = ['James Robertson']
   s.files = Dir['lib/qnd_html2page.rb']

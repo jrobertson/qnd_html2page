@@ -41,7 +41,7 @@ class QndHtml2Page
 
   def scan(html)
 
-    # add the span tag after every element in the body
+    # add the span tag after almost every element in the body
 
     doc = Rexle.new(html)
     body = doc.root.element('body')
@@ -67,14 +67,14 @@ class QndHtml2Page
     File.write tmpfile.path + '.html', doc.root.xml
 
     browser = Ferrum::Browser.new
-    #browser.resize width: 300, height: 300
     browser.goto('file://' + tmpfile.path + '.html')
-    browser.screenshot(path: "/tmp/page.jpg") 
     span_list = browser.xpath('//span')
     a = span_list.map {|x| [x.text, x.find_position.last] }
 
     
-    heights = ((a.last.last) / @height).round.to_i.times.inject([@height]) {|r, x| r << (r.last + @height)  } 
+    heights = ((a.last.last) / @height).round.to_i.times\
+        .inject([@height]) {|r, x| r << (r.last + @height)  } 
+    
     puts ('heights: ' + heights.inspect).debug if @debug
     height = heights.shift
 
@@ -106,7 +106,8 @@ class QndHtml2Page
     pages = elements.slice_at(*stops).map do |e_list|
 
       div = Rexle::Element.new 'div'
-      e_list.reject! {|e| e.name == 'span' and e.attributes[:class] == 'qndhtml2pg' }
+      e_list.reject! {|e| e.name == 'span' and 
+                      e.attributes[:class] == 'qndhtml2pg' }
       next if e_list.empty?
       e_list.each {|e| div.add e}
       
