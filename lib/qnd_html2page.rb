@@ -39,9 +39,16 @@ class QndHtml2Page
 
   private
 
-  def scan(html)
-
-    # add the span tag after almost every element in the body
+  def scan(obj)
+    
+    raw_html = obj.is_a?(Rexle) ? obj.xml : obj
+      
+    # <br/> acts as a hard page break
+    html = raw_html.gsub(/<br\s*\/>/) do |x|
+      '<span class="qndhtml2pg">pagebreak' + x.object_id.to_s + '</span>'
+    end
+    
+    # add the span tag after almost every element in the body    
 
     doc = Rexle.new(html)
     body = doc.root.element('body')
@@ -68,11 +75,16 @@ class QndHtml2Page
 
     browser = Ferrum::Browser.new
     browser.goto('file://' + tmpfile.path + '.html')
-    span_list = browser.xpath('//span')
-    a = span_list.map {|x| [x.text, x.find_position.last] }
-
+    span_list = browser.xpath('//span[@class="qndhtml2pg"]')
     
-    heights = ((a.last.last) / @height).round.to_i.times\
+    maxheight = span_list.last.find_position.last
+
+    a = span_list.map do |x| 
+      ypos = x.text[/^pagebreak/] ? maxheight : x.find_position.last        
+      [x.text, ypos] 
+    end
+    
+    heights = ((maxheight) / @height).round.to_i.times\
         .inject([@height]) {|r, x| r << (r.last + @height)  } 
     
     puts ('heights: ' + heights.inspect).debug if @debug
@@ -84,7 +96,12 @@ class QndHtml2Page
       puts ('x: ' + x.inspect).debug if @debug
       puts ('height: ' + height.inspect).debug if @debug
       
-      x.last < height ? (r.last << x) : (height = heights.shift; r << [x])
+      if x.first[/^pagebreak/] then
+        r << [x]
+      else
+        x.last < height ? (r.last << x) : (height = heights.shift; r << [x])
+      end
+      
       r
 
     end
@@ -106,9 +123,12 @@ class QndHtml2Page
     pages = elements.slice_at(*stops).map do |e_list|
 
       div = Rexle::Element.new 'div'
-      e_list.reject! {|e| e.name == 'span' and 
-                      e.attributes[:class] == 'qndhtml2pg' }
+      e_list.reject! do |e| 
+                r = e.name == 'span' and e.attributes[:class] == 'qndhtml2pg'
+                r
+      end
       next if e_list.empty?
+
       e_list.each {|e| div.add e}
       
       div
