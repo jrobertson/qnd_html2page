@@ -124,14 +124,20 @@ class QndHtml2Page
 
       div = Rexle::Element.new 'div'
       puts 'e_list: ' + e_list.inspect if @debug
-            
+      
+      e_list.reject! do |e|
+        r = e.name == 'span' and e.attributes[:class] == 'qndhtml2pg'
+        puts 'r: ' + r.inspect
+        r
+      end
+      
       next if e_list.empty?
 
       e_list.each {|e| div.add e}
       
       puts 'div: ' + div.xml.inspect if @debug
       div.xpath('//span[@class="qndhtml2pg"]').each(&:delete)
-      
+      puts 'after div: ' + div.xml.inspect if @debug      
       div
     end.compact
 
