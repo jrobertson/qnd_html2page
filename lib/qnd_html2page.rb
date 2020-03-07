@@ -123,18 +123,17 @@ class QndHtml2Page
     pages = elements.slice_at(*stops).map do |e_list|
 
       div = Rexle::Element.new 'div'
-      e_list.reject! do |e| 
-                r = e.name == 'span' and e.attributes[:class] == 'qndhtml2pg'
-                r
-      end
+      puts 'e_list: ' + e_list.inspect if @debug
+            
       next if e_list.empty?
 
       e_list.each {|e| div.add e}
       
+      puts 'div: ' + div.xml.inspect if @debug
+      div.xpath('//span[@class="qndhtml2pg"]').each(&:delete)
+      
       div
     end.compact
-
-    @to_pages = pages
 
   end
 
